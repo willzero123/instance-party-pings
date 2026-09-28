@@ -43,6 +43,7 @@ import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PartyChanged;
 import net.runelite.client.party.PartyMember;
@@ -54,6 +55,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.party.PartyConfig;
 import net.runelite.client.plugins.party.PartyPlugin;
+import net.runelite.client.plugins.party.PartyPluginService;
 import net.runelite.client.plugins.party.data.PartyData;
 import net.runelite.client.plugins.party.messages.TilePing;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -85,13 +87,15 @@ public class InstancePartyPingsPlugin extends Plugin
 	private InstancePingOverlay pingOverlay;
 
 	@Inject
-	private PartyConfig partyConfig;
+	private ConfigManager configManager;
+
+	@Inject
+	private PartyPluginService partyPluginService;
 
 	@Inject
 	private PluginManager pluginManager;
 
-	@Inject
-	private PartyPlugin partyPlugin;
+	private PartyConfig partyConfig;
 
 	@Getter
 	private final List<InstanceTilePingData> pendingTilePings = Collections.synchronizedList(new ArrayList<>());
@@ -103,6 +107,7 @@ public class InstancePartyPingsPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
+		partyConfig = configManager.getConfig(PartyConfig.class);
 		pingSession.incrementAndGet();
 		overlayManager.add(pingOverlay);
 		wsClient.registerMessage(InstanceTilePing.class);
@@ -237,12 +242,24 @@ public class InstancePartyPingsPlugin extends Plugin
 			&& pluginManager.isPluginActive(this)
 			&& client.getGameState() == GameState.LOGGED_IN
 			&& party.isInParty()
-			&& pluginManager.isPluginActive(partyPlugin);
+			&& isPartyPluginActive();
+	}
+
+	private boolean isPartyPluginActive()
+	{
+		for (Plugin plugin : pluginManager.getPlugins())
+		{
+			if (plugin instanceof PartyPlugin)
+			{
+				return pluginManager.isPluginActive(plugin);
+			}
+		}
+		return false;
 	}
 
 	private Color memberColor(long memberId)
 	{
-		final PartyData partyData = partyPlugin.getPartyDataMap().get(memberId);
+		final PartyData partyData = partyPluginService.getPartyData(memberId);
 		return partyData != null ? partyData.getColor() : Color.RED;
 	}
 
