@@ -56,7 +56,7 @@ import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.party.PartyConfig;
 import net.runelite.client.plugins.party.PartyPlugin;
 import net.runelite.client.plugins.party.PartyPluginService;
-import net.runelite.client.plugins.party.data.PartyData;
+import net.runelite.client.plugins.party.data.PartyMemberData;
 import net.runelite.client.plugins.party.messages.TilePing;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -259,7 +259,7 @@ public class InstancePartyPingsPlugin extends Plugin
 
 	private Color memberColor(long memberId)
 	{
-		final PartyData partyData = partyPluginService.getPartyData(memberId);
+		final PartyMemberData partyData = partyPluginService.getPartyData(memberId);
 		return partyData != null ? partyData.getColor() : Color.RED;
 	}
 
